@@ -64,6 +64,14 @@ func (wo WatermarkOptions) ShouldReplicate() bool {
 	return wo.Gravity.Type == GravityReplicate
 }
 
+type BlurRegion struct {
+	X0    int
+	Y0    int
+	X1    int
+	Y1    int
+	Sigma float32
+}
+
 type ProcessingOptions struct {
 	ResizingType      ResizeType
 	Width             int
@@ -88,6 +96,7 @@ type ProcessingOptions struct {
 	Flatten           bool
 	Background        vips.Color
 	Blur              float32
+	BlurRegions       []BlurRegion
 	Sharpen           float32
 	Pixelate          int
 	StripMetadata     bool
@@ -669,6 +678,40 @@ func applyBlurOption(po *ProcessingOptions, args []string) error {
 	return nil
 }
 
+func applyBlurRegionOption(po *ProcessingOptions, args []string) error {
+	if len(args) != 5 {
+		return fmt.Errorf("Invalid blur region arguments: %v", args)
+	}
+
+	x0, err := strconv.Atoi(args[0])
+	if err != nil {
+		return fmt.Errorf("Invalid blur region X0: %s", args[0])
+	}
+
+	y0, err := strconv.Atoi(args[1])
+	if err != nil {
+		return fmt.Errorf("Invalid blur region Y0: %s", args[1])
+	}
+
+	x1, err := strconv.Atoi(args[2])
+	if err != nil {
+		return fmt.Errorf("Invalid blur region X1: %s", args[2])
+	}
+
+	y1, err := strconv.Atoi(args[3])
+	if err != nil {
+		return fmt.Errorf("Invalid blur region Y1: %s", args[3])
+	}
+
+	sigma, err := strconv.ParseFloat(args[4], 32)
+	if err != nil {
+		return fmt.Errorf("Invalid blur region sigma: %s", args[4])
+	}
+
+	po.BlurRegions = append(po.BlurRegions, BlurRegion{X0: x0, Y0: y0, X1: x1, Y1: y1, Sigma: float32(sigma)})
+	return nil
+}
+
 func applySharpenOption(po *ProcessingOptions, args []string) error {
 	if len(args) > 1 {
 		return fmt.Errorf("Invalid sharpen arguments: %v", args)
@@ -1024,6 +1067,8 @@ func applyURLOption(po *ProcessingOptions, name string, args []string, usedPrese
 		return applyBackgroundOption(po, args)
 	case "blur", "bl":
 		return applyBlurOption(po, args)
+	case "blurregion", "blr":
+		return applyBlurRegionOption(po, args)
 	case "sharpen", "sh":
 		return applySharpenOption(po, args)
 	case "pixelate", "pix":
