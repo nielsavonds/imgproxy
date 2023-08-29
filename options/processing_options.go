@@ -679,36 +679,42 @@ func applyBlurOption(po *ProcessingOptions, args []string) error {
 }
 
 func applyBlurRegionOption(po *ProcessingOptions, args []string) error {
-	if len(args) != 5 {
+
+	// Check if we have a multiple of 5 arguments
+	if len(args)%5 != 0 {
 		return fmt.Errorf("Invalid blur region arguments: %v", args)
 	}
 
-	x0, err := strconv.Atoi(args[0])
-	if err != nil {
-		return fmt.Errorf("Invalid blur region X0: %s", args[0])
+	for i := 0; i < len(args); i += 5 {
+
+		x0, err := strconv.Atoi(args[i])
+		if err != nil {
+			return fmt.Errorf("Invalid blur region X0: %s", args[i])
+		}
+
+		y0, err := strconv.Atoi(args[i+1])
+		if err != nil {
+			return fmt.Errorf("Invalid blur region Y0: %s", args[i+1])
+		}
+
+		x1, err := strconv.Atoi(args[i+2])
+		if err != nil {
+			return fmt.Errorf("Invalid blur region X1: %s", args[i+2])
+		}
+
+		y1, err := strconv.Atoi(args[i+3])
+		if err != nil {
+			return fmt.Errorf("Invalid blur region Y1: %s", args[i+3])
+		}
+
+		sigma, err := strconv.ParseFloat(args[i+4], 32)
+		if err != nil {
+			return fmt.Errorf("Invalid blur region sigma: %s", args[i+4])
+		}
+
+		po.BlurRegions = append(po.BlurRegions, BlurRegion{X0: x0, Y0: y0, X1: x1, Y1: y1, Sigma: float32(sigma)})
 	}
 
-	y0, err := strconv.Atoi(args[1])
-	if err != nil {
-		return fmt.Errorf("Invalid blur region Y0: %s", args[1])
-	}
-
-	x1, err := strconv.Atoi(args[2])
-	if err != nil {
-		return fmt.Errorf("Invalid blur region X1: %s", args[2])
-	}
-
-	y1, err := strconv.Atoi(args[3])
-	if err != nil {
-		return fmt.Errorf("Invalid blur region Y1: %s", args[3])
-	}
-
-	sigma, err := strconv.ParseFloat(args[4], 32)
-	if err != nil {
-		return fmt.Errorf("Invalid blur region sigma: %s", args[4])
-	}
-
-	po.BlurRegions = append(po.BlurRegions, BlurRegion{X0: x0, Y0: y0, X1: x1, Y1: y1, Sigma: float32(sigma)})
 	return nil
 }
 
